@@ -105,6 +105,63 @@ mvn spring-boot:run
 
 ---
 
+### Register  
+`POST /api/auth/register`  
+```json
+{
+  "username": "ashwin",
+  "password": "password123"
+}
+```
+
+### Login
+`POST /api/auth/login`  
+```json
+{
+  "username": "ashwin",
+  "password": "password123"
+}
+```
+response : 
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR..."
+}
+```
+### Use header
+Authorization: Bearer <TOKEN>
+
+###📝 Todos
+### Create Todo
+`POST /api/todos`
+```json
+{
+  "title": "Learn Spring Boot",
+  "description": "Build Todo API",
+  "completed": false
+}
+```
+### Get All Todos
+
+### GET /api/todos?page=0&size=5
+
+### Get Todo by ID
+
+### GET /api/todos/{id}
+
+### Update Todo
+`PUT /api/todos/{id}`
+```json
+{
+  "title": "Updated Title",
+  "description": "Updated Desc",
+  "completed": true
+}
+```
+### Delete Todo
+`DELETE /api/todos/{id}`
+
+
 ## Future Improvements
 
 - Add **user profile management**
