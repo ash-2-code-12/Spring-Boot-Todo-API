@@ -5,92 +5,80 @@ import dev.ash.todoapp.service.TodoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/todo")
+@RequestMapping("/todos")
+@RequiredArgsConstructor
 public class TodoController {
-    private TodoService todoService;
 
-    @Autowired
-    public TodoController(TodoService todoService){
-        this.todoService = todoService;
-    }
+    private final TodoService todoService;
 
-    @PostMapping("/create")
-    @Operation(summary = "Create a new Todo") //documentation
+    @PostMapping
+    @Operation(summary = "Create a new Todo")
     public ResponseEntity<Todo> createTodo(@RequestBody Todo todo) {
-        return ResponseEntity.status(201).body(todoService.createTodo(todo));
+        return ResponseEntity.status(HttpStatus.CREATED).body(todoService.createTodo(todo));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Gets todo data by id") // documentation
-    @ApiResponses({  // documentation
+    @Operation(summary = "Get todo by id")
+    @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Todo Found"),
             @ApiResponse(responseCode = "404", description = "Todo Not Found")
     })
     public ResponseEntity<Todo> getTodoById(@PathVariable long id) {
-        try {
-            return ResponseEntity.ok(todoService.getTodoById(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(todoService.getUserTodoById(id));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<Todo>> getAllTodos(){
-        List<Todo> todos = todoService.getAllTodos();
-        if(todos.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(todos);
+    @GetMapping
+    @Operation(summary = "Get all todos for the current user")
+    public ResponseEntity<List<Todo>> getAllTodos() {
+        List<Todo> todos = todoService.getAllUserTodos();
+        return todos.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(todos);
     }
 
-    @GetMapping("/paged")   //ex: GET /todos?page=1&size=10&sortBy=title
-    @Operation(summary = "Gets todo data by page")   // documentation
-    @ApiResponses({   // documentation
-            @ApiResponse(responseCode = "200", description = "Todo Found"),
-            @ApiResponse(responseCode = "404", description = "Todo Not Found")
+    @GetMapping("/paged")
+    @Operation(summary = "Get todos by page")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Todos Found"),
+            @ApiResponse(responseCode = "204", description = "No Todos Found")
     })
     public ResponseEntity<Page<Todo>> getTodoByPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "id") String sortBy ) {
+            @RequestParam(defaultValue = "id") String sortBy) {
+
         Page<Todo> pagedTodos = todoService.getTodoByPage(page, size, sortBy);
-        if(pagedTodos.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(pagedTodos);
+        return pagedTodos.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(pagedTodos);
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<Todo> updateTodo(@RequestBody Todo todo) {
-        try {
-            return ResponseEntity.ok(todoService.updateTodo(todo));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping("/{id}")
+    @Operation(summary = "Update a todo by id")
+    public ResponseEntity<Todo> updateTodo(@PathVariable long id, @RequestBody Todo todo) {
+        return ResponseEntity.ok(todoService.updateTodo(id, todo));
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Todo> deleteById(@PathVariable long id) {
-        try {
-            todoService.deleteTodoById(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @DeleteMapping("/delete/all")
-    public ResponseEntity<Todo> deleteAll() {
-        todoService.deleteAllTodos();
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a todo by id")
+    public ResponseEntity<Void> deleteById(@PathVariable long id) {
+        todoService.deleteUserTodoById(id);
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping
+    @Operation(summary = "Delete all todos of the current user")
+    public ResponseEntity<Void> deleteAll() {
+        todoService.deleteAllUserTodos();
+        return ResponseEntity.noContent().build();
+    }
 }
